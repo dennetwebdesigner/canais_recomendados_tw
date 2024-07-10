@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "node --watch ./src/index.js"
+    "dev": "nodemon --watch ./src/index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
