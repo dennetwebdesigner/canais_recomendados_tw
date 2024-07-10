@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #333;
+        color: white;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        height: 3rem;
+      }
+
+      #channel {
+        height: 2rem;
+        width: 15rem;
+        padding: 0.5rem 0.5rem;
+        outline: none;
+        border-radius: 0.4rem;
+      }
+      #search {
+        background-color: transparent;
+        color: white;
+        border: 1px solid white;
+        padding: 0.2rem 0.5rem;
+        height: 2rem;
+        border-radius: 0.4rem;
+        transition: 0.2s;
+        font-weight: bolder;
+        cursor: pointer;
+      }
+
+      #search:hover {
+        background-color: rgb(77, 204, 77);
+        transition: 0.2s;
+        color: black;
+      }
+      h2 {
+        text-align: center;
+      }
+      h2 a {
+        color: white;
+      }
+      .recommend {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        transition: 2s;
+        display: block;
+        margin: 1rem auto;
+        text-align: center;
+      }
+
+      .recommend {
+        border: 2px solid white;
+        width: 50%;
+        text-align: center;
+        padding: 0.8rem 0;
+        transition: 0.5s;
+      }
+      .recommend :hover {
+        border: none;
+        border-bottom: 2px solid white;
+        transition: 0.5s;
+      }
+      .recommend a {
+        color: white;
+        text-decoration: none;
+      }
+      .hide {
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>RecommendTW</h1>
+      <div class="search">
+        <input type="text" id="channel" />
+        <button id="search">pesquisar canal</button>
+      </div>
+    </header>
+    <div id="hide"></div>
+    <h2></h2>
+    <div id="content"></div>
+
+    <script>
+      const divcontent = document.querySelector("#content");
+      const divhide = document.querySelector("#hide");
+      const inputchannel = document.querySelector("#channel");
+      const buttonsearch = document.querySelector("#search");
+
+      let dataHTML = null;
+      async function get_data(select_channel) {
+        try {
+          console.log(select_channel);
+          const response = await fetch("http://localhost:3000", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ channel: select_channel }),
+          });
+          const data = await response.json();
+
+          if (!data.status) {
+            divcontent.innerHTML =
+              "Ocorreu um erro, atualize a pagina e tente novamente";
+            return;
+          }
+
+          divhide.innerHTML = data.html;
+          document.querySelector("h2").innerHTML =
+            "Canais recomendados por <a href='http://www.twitch.tv/" +
+            select_channel +
+            "' target='_blank'>" +
+            select_channel +
+            "</a>";
+        } catch (error) {
+          console.log(error.message);
+          divcontent.innerHTML =
+            "Ocorreu um erro, atualize a pagina e tente novamente";
+        }
+      }
+
+      const tryget = setInterval(() => {
+        if (divhide.children.length > 0) {
+          clearInterval(tryget);
+          dataHTML = divhide.children[1].children;
+          var arr = Array.from(dataHTML);
+          arr.forEach((html, index) => {
+            // const e = html.document.querySelector('div')
+            const maindiv =
+              html.children[0].children[0].children[0].children[1].children[0];
+            const textfull = maindiv.innerHTML;
+            const textExplode = textfull.split(" ");
+            const channelPoint = textExplode[textExplode.length - 1];
+            const channel = channelPoint.substring(
+              0,
+              channelPoint.lastIndexOf(".")
+            );
+            maindiv.classList.add("recommend");
+
+            divcontent.innerHTML =
+              index == 0
+                ? `<div class='recommend'><a href='https://www.twitch.com/${channel}' target='_blank'>${channel}</a></div>`
+                : divcontent.innerHTML +
+                  `<div class='recommend'><a href='https://www.twitch.com/${channel}' target='_blank'>${channel}</a></div>`;
+            divhide.style.display = "none";
+            // for(let i = 0; i < html.children.length; i++){
+            //   console.log(html[i])
+            // }
+          });
+        }
+      }, 1000);
+
+      buttonsearch.onclick = () => {
+        if (!inputchannel.value) {
+          alert("Preencha os campos!");
+          return;
+        }
+        get_data(inputchannel.value);
+      };
+    </script>
+  </body>
+</html>
